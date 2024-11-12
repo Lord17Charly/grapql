@@ -11,7 +11,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
-
+import os
+import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-o^zrqs(bmc%gp&2i5^(i6_$o_9#vg$)kmrg+me308x9w&2$xng'
+SECRET_KEY = os.environ.get('SECRET_KEY', default='your secret key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -37,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'graphene_django',
+    'django_filters',
     'header',
     'education',
     'archievements',
@@ -44,7 +47,7 @@ INSTALLED_APPS = [
     'skills',
     'work_experiencie',
     'interests',
-
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -81,15 +84,21 @@ WSGI_APPLICATION = 'cv_manager.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'cv_manager',
+#         'USER': 'harlock024',
+#         'PASSWORD': '123456',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'cv_manager',
-        'USER': 'harlock024',
-        'PASSWORD': '123456',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    'default': dj_database_url.config(
+        default='postgresql://harlock024:123456@localhost:5432/cv_manager',
+        conn_max_age=600
+    )
 }
 
 # Password validation
@@ -132,3 +141,18 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+GRAPHENE = {
+    "SCHEMA": "cv_manager.schema.schema",
+    "MIDDLEWARE":[
+        'graphene_django.debug.DjangoDebugMiddleware',
+    ]
+}
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "graphql_jwt.backends.JSONWebTokenBackend",
+]
+
+CORS_ORIGIN_ALLOW_ALL = True
