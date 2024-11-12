@@ -4,7 +4,6 @@ from graphene_django import DjangoObjectType
 from graphql import GraphQLError
 from .models import Skill
 
-
 class skillsType(DjangoObjectType):
     class Meta:
         model = Skill
@@ -21,7 +20,6 @@ class CreateSkill(graphene.Mutation):
 
     class Arguments:
         name = graphene.String(required=True)
-
 
     def  mutate(self, info,name):
         user = info.context.user
