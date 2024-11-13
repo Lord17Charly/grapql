@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'work_experiencie',
     'interests',
     'linksHeader',
+    'work_exp_archivements',
     'corsheaders',
 ]
 

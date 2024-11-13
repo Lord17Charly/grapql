@@ -17,7 +17,6 @@ class Query(graphene.ObjectType):
     def resolve_linksHeaders(self, info):
         return LinksHeader.objects.all()
 
-
 class CreateLinksHeader(graphene.Mutation):
 
         title = graphene.String(required=True)
