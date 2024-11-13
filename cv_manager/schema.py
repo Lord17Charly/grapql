@@ -8,6 +8,7 @@ import skills.schema
 import archievements.schema
 import languajes.schema
 import interests.schema
+import education.schema
 
 class Query(users.schema.Query,
             header.schema.Query,
@@ -16,6 +17,7 @@ class Query(users.schema.Query,
             archievements.schema.Query,
             languajes.schema.Query,
             interests.schema.Query,
+            education.schema.Query,
             graphene.ObjectType):
     pass
 class Mutation(header.schema.Mutation,
@@ -25,9 +27,11 @@ class Mutation(header.schema.Mutation,
                 archievements.schema.Mutation,
                 languajes.schema.Mutation,
                 interests.schema.Mutation,
+                education.schema.Mutation,
                 graphene.ObjectType):
 
     token_auth = graphql_jwt.ObtainJSONWebToken.Field()
     verify_token = graphql_jwt.Verify.Field()
     refresh_token = graphql_jwt.Refresh.Field()
+
 schema = graphene.Schema(query=Query, mutation=Mutation)
