@@ -11,8 +11,8 @@ class EducationType(DjangoObjectType):
 
 class Query(graphene.ObjectType):
     degress = graphene.List(EducationType,search=graphene.String())
-
-
+    degreeById = graphene.Field(EducationType,idEducation=graphene.Int())
+    # get all education
     def resolve_degress(self,info,search=None, **kwargs):
         user = info.context.user
         if user.is_anonymous:
@@ -30,7 +30,16 @@ class Query(graphene.ObjectType):
             )
         return Education.objects.filter(filter)
 
-
+    # get by id
+    def resolve_degreeById(self,info,idEducation, **Kwargs):
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception('Log in to see your education')
+        print(user)
+        filter = (
+            Q(posted_by=user) & Q(id=idEducation)
+        )
+        return Education.objects.filter(filter).first()
 class CreateEducation(graphene.Mutation):
     idEducation = graphene.Int()
     degree = graphene.String()
@@ -72,5 +81,27 @@ class CreateEducation(graphene.Mutation):
             end_date=education.end_date,
             posted_by=education.posted_by
         )
+
+class DeleteEducation(graphene.Mutation):
+    idEducation = graphene.Int()
+
+    class Arguments:
+        idEducation = graphene.Int()
+
+    def mutate(self,info,idEducation):
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception('Log in to delete education')
+        print(user)
+
+        currentEducation = Education.objects.filter(id= idEducation).first()
+        print(currentEducation)
+
+        if not currentEducation:
+            raise Exception('Education not found')
+        currentEducation.delete()
+
+        return DeleteEducation(idEducation=idEducation)
 class Mutation(graphene.ObjectType):
     create_education = CreateEducation.Field()
+    delete_education = DeleteEducation.Field()
