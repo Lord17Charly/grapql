@@ -34,5 +34,41 @@ class CreateSkill(graphene.Mutation):
             posted_by=skill.posted_by
         )
 
+class UpdateSkill(graphene.Mutation):
+    idSkil = graphene.Int(required=True)
+    name = graphene.String(required=True)
+
+    class Arguments:
+        idSkill = graphene.Int(required=True)
+        name = graphene.String(required=True)
+
+    def mutate(self, info, idSkill, name):
+        user = info.context.user
+        if user.is_anonymous:
+            raise GraphQLError('Login to update a skill')
+        skill = Skill.objects.get(id=idSkill)
+        if skill.posted_by != user:
+            raise GraphQLError('Not permitted to update this skill')
+        skill.name = name
+        skill.save()
+        return UpdateSkill(idSkill=skill.id, name=skill.name)
+
+
+class DeleteSkill(graphene.Mutation):
+    success = graphene.Boolean()
+    class Arguments:
+        idSkill = graphene.Int(required=True)
+
+    def mutate(self, info, idSkill):
+        user = info.context.user
+        if user.is_anonymous:
+            raise GraphQLError('Login to delete a skill')
+        skill = Skill.objects.get(id=idSkill)
+        if skill.posted_by != user:
+            raise GraphQLError('Not permitted to delete this skill')
+        skill.delete()
+        return DeleteSkill(success=True)
+
 class Mutation(graphene.ObjectType):
    create_skill = CreateSkill.Field()
+   update_skill = UpdateSkill.Field()
