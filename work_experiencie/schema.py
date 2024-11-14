@@ -84,6 +84,58 @@ class CreateWorkEperiencies(graphene.Mutation):
             archivements=created_archivements
         )
 
+class UpdateWorkEperiencies(graphene.Mutation):
+    idWorkEperiencies = graphene.Int()
+    company = graphene.String()
+    location = graphene.String()
+    start_date = graphene.String()
+    end_date = graphene.String()
+    archivements = graphene.List(workExpArchType)
+
+    class Arguments:
+        idWorkEperiencies = graphene.Int(required=True)
+        company = graphene.String()
+        location = graphene.String()
+        start_date = graphene.String()
+        end_date = graphene.String()
+        archivements = graphene.List(WorkExpArchInput)
+
+    def mutate(self, info, idWorkEperiencies, company=None, location=None, start_date=None, end_date=None, archivements=None):
+        user = info.context.user
+        if user.is_anonymous:
+            raise GraphQLError('Login to update your work experience')
+
+        work_experience = WorkEperiencies.objects.filter(id=idWorkEperiencies, posted_by=user).first()
+        if not work_experience:
+            raise GraphQLError('Work experience not found or you do not have permission to edit it')
+
+        if company:
+            work_experience.company = company
+        if location:
+            work_experience.location = location
+        if start_date:
+            work_experience.start_date = start_date
+        if end_date:
+            work_experience.end_date = end_date
+        work_experience.save()
+
+        if archivements is not None:
+            WorkExperienciesArchivements.objects.filter(work_experiencies=work_experience).delete()
+            for archivement in archivements:
+                WorkExperienciesArchivements.objects.create(
+                    work_experiencies=work_experience,
+                    description=archivement.description
+                )
+
+        return UpdateWorkEperiencies(
+            idWorkEperiencies=work_experience.id,
+            company=work_experience.company,
+            location=work_experience.location,
+            start_date=work_experience.start_date,
+            end_date=work_experience.end_date,
+            archivements=work_experience.archivements.all()
+        )
 
 class Mutation(graphene.ObjectType):
     create_work_experiencies = CreateWorkEperiencies.Field()
+    update_work_experiencies = UpdateWorkEperiencies.Field()
