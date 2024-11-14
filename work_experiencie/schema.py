@@ -4,6 +4,7 @@ from .models import WorkEperiencies
 from graphql import GraphQLError
 from work_exp_archivements.models import WorkExperienciesArchivements
 from work_exp_archivements.schema import workExpArchType
+from django.db.models import Q
 
 
 class WorkExpArchInput(graphene.InputObjectType):
@@ -17,13 +18,23 @@ class WorkEperienciesType(DjangoObjectType):
         fields = '__all__'
 
     def resolve_archivements(self, info):
-        # Retorna solo los logros relacionados con esta instancia de `WorkEperiencies`
         return self.archivements.filter(work_experiencies=self)
 class Query(graphene.ObjectType):
     work_experiencies = graphene.List(WorkEperienciesType)
+    work_experienciesById = graphene.Field(WorkEperienciesType, idWorExp=graphene.Int(required=True))
 
     def resolve_work_experiencies(self, info):
         return WorkEperiencies.objects.all()
+
+    def resolve_work_experienciesById(self, info, idWorExp,**Kwargs):
+        user = info.context.user
+        if user.is_anonymous:
+            raise GraphQLError('Login to see your work experiencies')
+        print(user)
+        filter=(
+                Q(posted_by=user) & Q (id=idWorExp)
+            )
+        return WorkEperiencies.objects.filter(filter).first()
 
 class CreateWorkEperiencies(graphene.Mutation):
     idWorkEperiencies = graphene.Int()
@@ -72,6 +83,7 @@ class CreateWorkEperiencies(graphene.Mutation):
             end_date=work_experiencies.end_date,
             archivements=created_archivements
         )
+
 
 class Mutation(graphene.ObjectType):
     create_work_experiencies = CreateWorkEperiencies.Field()
