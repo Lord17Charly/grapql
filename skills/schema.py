@@ -35,7 +35,7 @@ class CreateSkill(graphene.Mutation):
         )
 
 class UpdateSkill(graphene.Mutation):
-    idSkil = graphene.Int(required=True)
+    idSkill = graphene.Int(required=True)
     name = graphene.String(required=True)
 
     class Arguments:
@@ -72,3 +72,4 @@ class DeleteSkill(graphene.Mutation):
 class Mutation(graphene.ObjectType):
    create_skill = CreateSkill.Field()
    update_skill = UpdateSkill.Field()
+   delete_skill = DeleteSkill.Field()
