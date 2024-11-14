@@ -136,6 +136,27 @@ class UpdateWorkEperiencies(graphene.Mutation):
             archivements=work_experience.archivements.all()
         )
 
+
+class DeleteWorkEperiencies(graphene.Mutation):
+    success = graphene.Boolean()
+
+    class Arguments:
+        idWorkEperiencies = graphene.Int(required=True)
+
+    def mutate(self, info, idWorkEperiencies):
+        user = info.context.user
+        if user.is_anonymous:
+            raise GraphQLError('Login to delete your work experience')
+
+        work_experience = WorkEperiencies.objects.filter(id=idWorkEperiencies, posted_by=user).first()
+        if not work_experience:
+            raise GraphQLError('Work experience not found or you do not have permission to delete it')
+
+        work_experience.delete()
+        return DeleteWorkEperiencies(success=True)
+
+
 class Mutation(graphene.ObjectType):
     create_work_experiencies = CreateWorkEperiencies.Field()
     update_work_experiencies = UpdateWorkEperiencies.Field()
+    delete_work_experiencies = DeleteWorkEperiencies.Field()
