@@ -79,3 +79,6 @@ class UpdateHeader(graphene.Mutation):
         )
 class Mutation(graphene.ObjectType):
     update_header = UpdateHeader.Field()
+
+
+schema = graphene.Schema(query=Query, mutation=Mutation)
