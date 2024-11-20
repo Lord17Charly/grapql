@@ -26,7 +26,7 @@ class Query(graphene.ObjectType):
             return Education.objects.filter(filter)[:10]
         else:
             filter= (
-                Q(posted_by=user) & Q(degree__icontains=search)
+                Q(posted_by=user)
             )
         return Education.objects.filter(filter)
 
@@ -41,46 +41,50 @@ class Query(graphene.ObjectType):
         )
         return Education.objects.filter(filter).first()
 class CreateEducation(graphene.Mutation):
-    idEducation = graphene.Int()
-    degree = graphene.String()
-    university = graphene.String()
-    start_date = graphene.Date()
-    end_date = graphene.Date()
-    posted_by = graphene.Field(UserType)
+            idEducation = graphene.Int()
+            degree = graphene.String()
+            university = graphene.String()
+            start_date = graphene.Date()
+            end_date = graphene.Date()
+            posted_by = graphene.Field(UserType)
 
-    class Arguments:
-        idEducation = graphene.Int()
-        degree = graphene.String()
-        university = graphene.String()
-        start_date = graphene.Date()
-        end_date = graphene.Date()
+            class Arguments:
+                idEducation = graphene.Int(required=False)  # Ahora es opcional
+                degree = graphene.String()
+                university = graphene.String()
+                start_date = graphene.Date()
+                end_date = graphene.Date()
 
-    def mutate(self,info,idEducation,degree,university,start_date,end_date):
-        user = info.context.user
-        if user.is_anonymous:
-            raise Exception('Log in to add education')
-        print(user)
+            def mutate(self, info, degree, university, start_date, end_date, idEducation=None):
+                user = info.context.user
+                if user.is_anonymous:
+                    raise Exception('Log in to add education')
 
-        currentEducation = Education.objects.filter(id=idEducation).first()
-        print(currentEducation)
-        education = Education(
-            degree=degree,
-            university=university,
-            start_date=start_date,
-            end_date=end_date,
-            posted_by=user
-        )
-        if currentEducation:
-            education.pk = currentEducation.id
-        education.save()
-        return CreateEducation(
-            idEducation=education.pk,
-            degree=education.degree,
-            university=education.university,
-            start_date=education.start_date,
-            end_date=education.end_date,
-            posted_by=education.posted_by
-        )
+                if idEducation:
+                    education = Education.objects.filter(id=idEducation).first()
+                    if not education:
+                        raise Exception('Education not found')
+                    education.degree = degree
+                    education.university = university
+                    education.start_date = start_date
+                    education.end_date = end_date
+                else:
+                    education = Education(
+                        degree=degree,
+                        university=university,
+                        start_date=start_date,
+                        end_date=end_date,
+                        posted_by=user
+                    )
+                education.save()
+                return CreateEducation(
+                    idEducation=education.id,
+                    degree=education.degree,
+                    university=education.university,
+                    start_date=education.start_date,
+                    end_date=education.end_date,
+                    posted_by=education.posted_by
+                )
 
 class DeleteEducation(graphene.Mutation):
     idEducation = graphene.Int()
@@ -105,3 +109,5 @@ class DeleteEducation(graphene.Mutation):
 class Mutation(graphene.ObjectType):
     create_education = CreateEducation.Field()
     delete_education = DeleteEducation.Field()
+
+schema = graphene.Schema(query=Query,mutation=Mutation)
