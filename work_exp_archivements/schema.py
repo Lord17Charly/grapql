@@ -86,3 +86,5 @@ class DeleteWorkEperienciesArchivementes(graphene.Mutation):
 class Mutation(graphene.ObjectType):
     create_work_exp_archivement = CreateWorkEperienciesArchivementes.Field()
     update_work_exp_archivement = UpdateWorkEperienciesArchivementes.Field()
+
+schema = graphene.Schema(query=Query, mutation=Mutation)
