@@ -2,7 +2,7 @@ import json
 from django.test import TestCase
 from graphene_django.utils.testing import GraphQLTestCase
 from django.contrib.auth import get_user_model
-from languajes.models import languages
+from languajes.models import Languages
 from mixer.backend.django import mixer
 
 class LanguagesTestCase(GraphQLTestCase):
@@ -30,7 +30,7 @@ class LanguagesTestCase(GraphQLTestCase):
 
         # Crear un lenguaje para las pruebas
         self.language = mixer.blend(
-            languages,
+            Languages,
             name="Spanish",
             posted_by=self.user
         )
@@ -61,12 +61,10 @@ class LanguagesTestCase(GraphQLTestCase):
         content = json.loads(response.content)
         self.assertResponseNoErrors(response)
 
-        # Verificar que el lenguaje retornado sea el correcto
         self.assertEqual(content['data']['languagesById']['name'], "Spanish")
         self.assertEqual(content['data']['languagesById']['postedBy']['username'], "testuser")
 
     def test_query_language_by_id_unauthenticated(self):
-        # Realizar la misma consulta sin autenticación
         QUERY_LANGUAGE_BY_ID = '''
         query GetLanguageById($idLanguage: Int!) {
             languagesById(idLanguage: $idLanguage) {

@@ -1,17 +1,20 @@
 import graphene
 from graphene_django import DjangoObjectType
 from graphql import GraphQLError
-from .models import languages
+
+from users.schema import UserType
+from .models import Languages
 from django.db.models import Q
 
-class languagesType(DjangoObjectType):
+class LanguagesType(DjangoObjectType):
     class Meta:
-        model = languages
+        model = Languages
+        fields = '__all__'
 
 class Query(graphene.ObjectType):
-    languages = graphene.List(languagesType)
+    languages_by_id = graphene.Field(LanguagesType,idLanguage=graphene.Int())
     def resolve_languages(self, info):
-        return languages.objects.all()
+        return Languages.objects.all()
 
     def resolve_languages_by_id(self,info,idLanguage,**Kwargs):
         user= info.context.user
@@ -21,19 +24,18 @@ class Query(graphene.ObjectType):
         filter = (
             Q(posted_by=user) & Q(id=idLanguage)
         )
-        return languages.objects.filter(filter).first()
+        return Languages.objects.filter(filter).first()
 
 class CreateLanguages(graphene.Mutation):
     name = graphene.String(required=True)
-    posted_by = graphene.Int()
+    posted_by = graphene.Field(UserType)
     class Arguments:
         name = graphene.String(required=True)
-
     def mutate(self, info,name):
         user = info.context.user
         if user.is_anonymous:
             raise GraphQLError('Login to create a languages')
-        language = languages.objects.create(
+        language = Languages.objects.create(
             name=name,
             posted_by=user
         )
@@ -49,11 +51,11 @@ class UpdateLanguages(graphene.Mutation):
             idLanguage = graphene.Int()
             name = graphene.String(required=True)
 
-        def mutate(self, info , idLanguage,name):
+        def mutate(self, info , idLanguage,name,**Kwargs):
             user = info.context.user
             if user.is_anonymous:
                 raise GraphQLError('Login to update a languages')
-            language = languages.objects.get(id=idLanguage)
+            language = Languages.objects.get(id=idLanguage)
             language.name = name
             language.save()
 
@@ -72,7 +74,7 @@ class Deletelanguages(graphene.Mutation):
             user = info.context.user
             if user.is_anonymous:
                 raise GraphQLError('Login to delete a languages')
-            language = languages.objects.get(id=idLanguage)
+            language = Languages.objects.get(id=idLanguage)
             language.delete()
 
             return Deletelanguages(success=True)
