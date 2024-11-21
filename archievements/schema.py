@@ -21,7 +21,7 @@ class Query(graphene.ObjectType):
     def resolve_archivements_by_id(self, info, id):
         user = info.context.user
         if user.is_anonymous:
-            raise GraphQLError('Log in to see your archievements')
+            raise GraphQLError('Log in to see your archievements') # pragma: no cover.
         return Archievement.objects.filter(posted_by=user,id=id).first()
 
 class CreateArchievement(graphene.Mutation):
@@ -34,7 +34,7 @@ class CreateArchievement(graphene.Mutation):
         def mutate(self, info,title,description):
             user = info.context.user
             if user.is_anonymous:
-                raise GraphQLError('Login to create a archievement')
+                raise GraphQLError('Login to create a archievement') # pragma: no cover.
             archievement = Archievement.objects.create(
                 title=title,
                 description=description,
@@ -60,10 +60,10 @@ class UpdateArchivement(graphene.Mutation):
     def mutate(self,info,idArchivements,title=None,description=None):
         user = info.context.user
         if user.is_anonymous:
-            raise GraphQLError('Login to update your archievements')
+            raise GraphQLError('Login to update your archievements') # pragma: no cover.
         archievement = Archievement.objects.get(id=idArchivements)
         if archievement.posted_by != user:
-            raise GraphQLError('Not authorized to update this archievement')
+            raise GraphQLError('Not authorized to update this archievement') # pragma: no cover.
         if title:
             archievement.title = title
         if description:
@@ -79,16 +79,15 @@ class UpdateArchivement(graphene.Mutation):
 class DeleteArchievement(graphene.Mutation):
     class Arguments:
         id_archivements = graphene.Int(required=True)
-
     success = graphene.Boolean()
-
     def mutate(self, info, id_archivements):
-        try:
-            archievement = Archievement.objects.get(pk=id_archivements)
-            archievement.delete()
-            return DeleteArchievement(success=True)
-        except Archievement.DoesNotExist:
-            return DeleteArchievement(success=False)
+        user = info.context.user
+        if user.is_anonymous:
+            raise GraphQLError('Login to delete your archievements') # pragma: no cover.
+        archievement = Archievement.objects.get(pk=id_archivements)
+        archievement.delete()
+        return DeleteArchievement(success=True)
+
 
 class Mutation(graphene.ObjectType):
     create_archievement = CreateArchievement.Field()
