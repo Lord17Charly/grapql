@@ -5,26 +5,24 @@ from archievements.models import Archievement
 from django.db.models import Q
 
 from education.schema import EducationType
+from work_exp_archivements import schema
 
 class ArchievementType(DjangoObjectType):
     class Meta:
         model = Archievement
 
 class Query(graphene.ObjectType):
-    archivementsBy = graphene.List(EducationType,idArchivement= graphene.Int())
     archivements = graphene.List(ArchievementType)
+    archivements_by_id = graphene.Field(ArchievementType, id=graphene.Int(required=True))
+
     def resolve_archivements(self, info):
         return Archievement.objects.all()
 
-    def resolve_archivementesById(self,info,idArchivement, **kwargs):
+    def resolve_archivements_by_id(self, info, id):
         user = info.context.user
         if user.is_anonymous:
-            raise Exception('Log in to see your archievements')
-        print(user)
-        filter=(
-            Q(posted_by=user) & Q(id=idArchivement)
-        )
-        return Archievement.object.filter(filter).first()
+            raise GraphQLError('Log in to see your archievements')
+        return Archievement.objects.filter(posted_by=user,id=id).first()
 
 class CreateArchievement(graphene.Mutation):
         title = graphene.String(required=True)
@@ -45,7 +43,7 @@ class CreateArchievement(graphene.Mutation):
             return CreateArchievement(
                 title=archievement.title,
                 description=archievement.description,
-                posted_by=archievement.posted_by
+                posted_by=user.id
             )
 class UpdateArchivement(graphene.Mutation):
     idArchivements = graphene.Int()
@@ -79,23 +77,22 @@ class UpdateArchivement(graphene.Mutation):
         )
 
 class DeleteArchievement(graphene.Mutation):
+    class Arguments:
+        id_archivements = graphene.Int(required=True)
+
     success = graphene.Boolean()
 
-    class Arguments:
-        idArchivements = graphene.Int(required=True)
-
-    def mutate(self, info, idArchivements):
-        user = info.context.user
-        if user.is_anonymous:
-            raise GraphQLError('Login to delete your archievements')
-        archievement = Archievement.objects.get(id=idArchivements)
-        if not archievement:
-            raise GraphQLError('Not authorized to delete this archievement')
-
-        archievement.delete()
-        return DeleteArchievement(success=True)
+    def mutate(self, info, id_archivements):
+        try:
+            archievement = Archievement.objects.get(pk=id_archivements)
+            archievement.delete()
+            return DeleteArchievement(success=True)
+        except Archievement.DoesNotExist:
+            return DeleteArchievement(success=False)
 
 class Mutation(graphene.ObjectType):
     create_archievement = CreateArchievement.Field()
     update_archievement = UpdateArchivement.Field()
-    delete_archievemnt = DeleteArchievement.Field()
+    delete_archievement = DeleteArchievement.Field()
+
+schema = graphene.Schema(query=Query, mutation=Mutation)
