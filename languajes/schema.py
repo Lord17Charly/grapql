@@ -2,6 +2,7 @@ import graphene
 from graphene_django import DjangoObjectType
 from graphql import GraphQLError
 from .models import languages
+from django.db.models import Q
 
 class languagesType(DjangoObjectType):
     class Meta:
@@ -12,6 +13,15 @@ class Query(graphene.ObjectType):
     def resolve_languages(self, info):
         return languages.objects.all()
 
+    def resolve_languages_by_id(self,info,idLanguage,**Kwargs):
+        user= info.context.user
+        if user.is_anonymous:
+            raise GraphQLError('Login to see your languages')
+        print(user)
+        filter = (
+            Q(posted_by=user) & Q(id=idLanguage)
+        )
+        return languages.objects.filter(filter).first()
 
 class CreateLanguages(graphene.Mutation):
     name = graphene.String(required=True)
