@@ -13,6 +13,12 @@ class Query(graphene.ObjectType):
     def resolve_interests(self, info):
         return Interest.objects.all()
 
+    def resolve_interest_by_id(self, info, id):
+        user = info.context.user
+        if user.is_anonymous:
+            raise GraphQLError('Login to view interest')
+        return Interest.objects.get(id=id).first()
+
 class CreateInterest(graphene.Mutation):
         name = graphene.String(required=True)
         icon = graphene.String(required=True)
@@ -78,3 +84,4 @@ class Mutation(graphene.ObjectType):
     create_interest = CreateInterest.Field()
     update_interest = UpdateInterest.Field()
     delete_interest = DeleteInterest.Field()
+schema = graphene.Schema(query=Query, mutation=Mutation)
